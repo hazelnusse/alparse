@@ -32,20 +32,21 @@ def alparse(filenamebase, code="DynSysIn", classname=None):
 
     variables, constants, odefunc, outputs = alparsec(filenamebase, code, classname)
 
-    print("[Parameters]")
-    print(parameters)
-    
-    print("[States]")
-    print(states)
+    if code == "DynSysIn":
+        print("[Parameters]")
+        print(parameters)
+        
+        print("[States]")
+        print(states)
 
-    print("[Constants]")
-    print(constants)
+        print("[Constants]")
+        print(constants)
 
-    print("[Equations of Motion]")
-    print(odefunc)
+        print("[Equations of Motion]")
+        print(odefunc)
 
-    print("[Outputs]")
-    print(outputs)
+        print("[Outputs]")
+        print(outputs)
 
 
 def alparsein(filenamebase, code):
@@ -178,9 +179,37 @@ def alparsec(filenamebase, code, classname):
     outputs = ""
     for l in fp:
         l = l.strip()
+        if l:
+            # Handle multi-line statements
+            while l[-1] != ';':
+                print "in while", l
+                l += fp.next().strip()
+            if code == "DynSysIn" or code == "Python":
+                l = l[:-1]
+            l += "\n"
+            outputs += l
+            continue
+        break
 
-    return variables, constants, odefunc, ""
+    seekto(fp, "/* Write output to screen and to output file(s) */")
+    for l in fp:
+        l = l.strip()
+        if l:
+            if l[:6] == "writef":
+                continue
+            # Handle multi-line statements
+            while l[-1] != ';':
+                print "in while", l
+                l += fp.next().strip()
+            if code == "DynSysIn" or code == "Python":
+                l = l[:-1]
+            l += "\n"
+            outputs += l
+            continue
+        break
+
+    return variables, constants, odefunc, outputs
 
 
-alparse("slotted_discs_al", code="C")
+alparse("slotted_discs_al", code="Python")
 
