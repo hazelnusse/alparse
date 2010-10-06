@@ -1,0 +1,3 @@
+Right now, only code generated from code dynamics() has been tested, but
+ensuring things work for other Autolev output types, such as code algebraic()
+or code nonlinear()
