@@ -11,6 +11,12 @@
 
 """
 
+def seekto(fp, string):
+    for l in fp:
+        if l.strip() == string:
+            break
+
+
 def alparse(filenamebase, code="DynSysIn", classname=None):
     """
         filenamebase : string of the base output filename.  alparse() expects
@@ -36,7 +42,7 @@ def alparse(filenamebase, code="DynSysIn", classname=None):
     print(constants)
 
     print("[Equations of Motion]")
-    print(odefunc )
+    print(odefunc)
 
     print("[Outputs]")
     print(outputs)
@@ -85,7 +91,6 @@ def alparsec(filenamebase, code, classname):
     """
 
     fp = open(filenamebase + ".c", "r")
-    print dir(fp)
 
     # For the Autolev C files I've examined, there are 20 lines of comments,
     # #include statements, and function forward declarations at the top.  The
@@ -127,32 +132,55 @@ def alparsec(filenamebase, code, classname):
                 break
             variables += l
 
-    # Seek to the line that has the comment above the constants
-    for l in fp:
-        if l.strip() == "/* Evaluate constants */":
-            break
-
+    # Seek to the line has the comment above the constants
+    seekto(fp, "/* Evaluate constants */")
 
     # Get all the equations for the Evaluate constants
     constants = ""
     for l in fp:
         l = l.strip()
         if l:
-            if code != "C" or code != "C++":
-                l = l[:-1]
+            # Handle multi-line statements
+            while l[-1] != ';':
+                l += fp.next().strip()
+
+            if code == "DynSysIn" or code == "Python":
+                l = l[:-1]  # remove the semi-colon at end
             l += "\n"
             constants += l
         else:
             break
 
+    # Seek to the line in the ode func that has the comment above the equations
+    seekto(fp, "/* Update variables after integration step */" )
+    while fp.next().strip() != '':
+        pass
 
-    return variables, constants, "", ""
+    # Get the equations in the right hand side of the odes
+    odefunc = ""
+    for l in fp:
+        l = l.strip()
+        if l:
+            if l == "/* Update derivative array prior to integration step */":
+                break
+
+            # Handle multi-line statements
+            while l[-1] != ';':
+                l += fp.next().strip()
+            if code == "DynSysIn" or code == "Python":
+                l = l[:-1]
+            l += "\n"
+            odefunc += l
+
+    # Seek to the first line of the output equations
+    seekto(fp, "/* Evaluate output quantities */")
+
+    outputs = ""
+    for l in fp:
+        l = l.strip()
+
+    return variables, constants, odefunc, ""
 
 
-
-
-
-
-
-alparse("slotted_discs_al", code="C++")
+alparse("slotted_discs_al", code="C")
 
