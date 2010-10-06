@@ -127,7 +127,26 @@ def alparsec(filenamebase, code, classname):
                 break
             variables += l
 
-    return variables, "", "", ""
+    # Seek to the line that has the comment above the constants
+    for l in fp:
+        if l.strip() == "/* Evaluate constants */":
+            break
+
+
+    # Get all the equations for the Evaluate constants
+    constants = ""
+    for l in fp:
+        l = l.strip()
+        if l:
+            if code != "C" or code != "C++":
+                l = l[:-1]
+            l += "\n"
+            constants += l
+        else:
+            break
+
+
+    return variables, constants, "", ""
 
 
 
