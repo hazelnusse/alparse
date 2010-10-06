@@ -97,25 +97,37 @@ def alparsec(filenamebase, code, classname):
 
     # Loop to grab the statement that declares all the global variables,
     # assumes that they are declared as type 'double'
+    variables = []
     for l in fp:
-        print "original line", l,
         l = l.strip().split()
         if l:
             if l[0] == "double":
-                l = l[1].strip()
-                print l
-                l = l.split(',')
-                l[-1] = l[-1][:-1]
-                print l
+                l = l[1].strip().split(',')
 
                 if l[0] == "Pi":
-                    nl = fp.next().strip().split(',')
-                    print "nl =", nl
+                    l = l[1:]
+                if l[0] == "DEGtoRAD":
+                    l = l[1:]
+                if l[0] == "RADtoDEG":
+                    l = l[1:]
+
+                # multi line statement
+                while l[-1] == '':
+                    l.pop(-1)
+                    l += fp.next().strip().split(',')
+                
+                if l[-1][-1] == ';':
+                    l[-1] = l[-1][:-1]
+
+                # Get rid of the Encode[??]
+                if l[-1][:6] == "Encode":
+                    l.pop(-1)
 
             if l[0] == "/*" and l[2] == "MAIN" and l[4] == "*/":
                 break
+            variables += l
 
-    return "", "", "", ""
+    return variables, "", "", ""
 
 
 
