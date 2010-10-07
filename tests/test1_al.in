@@ -1,0 +1,48 @@
+File: slotted_discs_al.in
+-----------------------------------------------------------------------------
+Note: Use spaces not tabs while editing this file.
+----------------------------------------------------------+------------------
+Description          Quantity             Units           | Value
+----------------------------------------------------------|------------------
+Constant             alpha                rad             |  1.570796326794897
+Constant             ctx                  UNITS           |  0.0
+Constant             cty                  UNITS           |  0.0
+Constant             ctz                  UNITS           |  0.0
+Constant             d                    m               |  1.5
+Constant             g                    m/s^2           |  9.81
+Constant             Ixx                  UNITS           |  0.0
+Constant             Ixy                  UNITS           |  0.0
+Constant             Iyy                  UNITS           |  0.0
+Constant             Izz                  UNITS           |  0.0
+Constant             k                    m               |  0.0
+Constant             l                    m               |  .1
+Constant             m                    kg              |  0.1
+Constant             phi                  UNITS           |  0.0
+Constant             ra                   m               |  0.1
+Constant             rb                   m               |  0.1
+Constant             theta                UNITS           |  0.7853981633974483
+
+Initial Value        q1                   rad             |  0.0
+Initial Value        q2                   rad             |  0.0
+Initial Value        q3                   UNITS           |  0.0
+Initial Value        q4                   m               |  0.0
+Initial Value        q5                   m               |  0.0
+Initial Value        w                    rad/s           |  0.0
+
+Initial Time         TINITIAL             s               |  0.0
+Final Time           TFINAL               s               |  1.0
+Integration Step     INTEGSTP             s               |  0.1
+Print-Integer        PRINTINT             Positive Integer|  1
+Absolute Error       ABSERR                               |  1.0E-08
+Relative Error       RELERR                               |  1.0E-07 
+----------------------------------------------------------+------------------
+
+Note:
+
+  INTEGSTP*PRINTINT is the time-interval for writing of output.
+
+  ABSERR should be set equal to 10^(-8)*Xsmall, where Xsmall is the estimated
+         smallest maximum absolute value of the variables being integrated.
+
+  RELERR should be set equal to 10^(-d), where d is the desired number of
+         significant digits of numerical integration results.

@@ -11,56 +11,118 @@
 
 """
 
+
+
 def seekto(fp, string):
     for l in fp:
         if l.strip() == string:
             break
 
+def writeDynSysIn(filenamebase, classname, infilestrings, cfilestrings):
+    intopts, parameters, states = infilestrings
+    variables, constants, odefunc, outputs = cfilestrings
+    fp = open(classname + ".txt", "w")
+    fp.write("[Name]\n" + classname + "\n\n")
 
-def alparse(filenamebase, code="DynSysIn", classname=None):
-    """
-        filenamebase : string of the base output filename.  alparse() expects
-        that filenamebase.c and filenamebase.in exist in the current working
-        directly.
 
-        code : valid choices are "DynSysIn", "Python", "C" or "C++"
+    fp.write("[Integration Options]\n")
+    fp.write(intopts + "\n")
 
-        classname : for "Python" and "C++" code, creates a class with this name
-    """
+    fp.write("[Parameters]\n")
+    fp.write(parameters + "\n")
+    
+    fp.write("[States]\n")
+    fp.write(states + "\n")
 
-    parameters, states = alparsein(filenamebase, code)
+    fp.write("[Constants]\n")
+    fp.write(constants + "\n")
 
-    variables, constants, odefunc, outputs = alparsec(filenamebase, code, classname)
+    fp.write("[Equations of Motion]\n")
+    fp.write(odefunc + "\n")
 
-    if code == "DynSysIn":
-        print("[Parameters]")
-        print(parameters)
-        
-        print("[States]")
-        print(states)
+    fp.write("[Outputs]\n")
+    fp.write(outputs + "\n")
+    
+    print(filenamebase + ".dir and " + filenamebase + ".c sucessfully" +
+            " parsed.  Output code is in:\n" + fp.name)
+    fp.close()
 
-        print("[Constants]")
-        print(constants)
+def writeC(infilestrings, cfilestrings, classname):
+    raise Exception
+    intopts, parameters, states = infilestrings
+    variables, constants, odefunc, outputs = cfilestrings
 
-        print("[Equations of Motion]")
-        print(odefunc)
+    filenamebase += "_al"
+    fp_header = open(filenamebase + ".h", "w")
+    fp_implementation = open(filenamebase + ".c", "w")
+    fp_driver = open(filenamebase + "_main.c", "w")
+    
+    # Write the variables on one long line
+    varstring = ""
+    for v in variables:
+        varstring += v + ", "
+    varstring = varstring[:-2] + ";\n"
 
-        print("[Outputs]")
-        print(outputs)
+    # Write the header file
+    fp_header.write(
+        "#ifndef " + filenamebase.upper() + "_H\n" +
+        "#define " + filenamebase.upper() + "_H\n\n" +
+        "// All variables defined as globals with file scope\n" +
+        "double " + varstring + "\n" +
+        "// Function prototypes\n" +
+        "int initConstants(void);\n" +
+        "int eoms(double t, const double x[], double f[], void * p);\n" +
+        "void outputs(void);\n" +
+        "#endif")
+    fp_header.close()
+    
+    # Write the implementation file
+    indented_constants = ""
+    indented_odefun = ""
+    indented_outputs = ""
+    for l in constants.splitlines(True):
+        indented_constants += "  " + l
+    for l in odefun.splitlines(True):
+        indented_odefun += "  " + l
+    for l in outputs.splitlines(True):
+        indented_outputs += "  " + l
 
+    fp_implementation.write(
+        "#include <math.h>\n"
+        "#include <gsl/gsl_odeiv.h>\n" +
+        "#include \"" + fp_header.name() + "\"\n" +
+        "int initConstants(void)\n{\n" + constants + "\n}" +
+        "// initConstants()\n\n" + 
+        "int eoms(double t, const double x[], double f[], void * p)\n{\n")
+        #for i in range(len(
+        #
+        #        "void outputs(void);\n" +
+        #        "#endif")
+    fp_implementation.close()
+
+def writePython(infilestrings, cfilestrings, classname):
+    raise Exception
+
+def writeCxx(infilestrings, cfilestrings, classname):
+    raise Exception
 
 def alparsein(filenamebase, code):
     """Parse the .in file from Autolev to grab all the lines that begin with
     the word 'Constant' or 'Initial Value'
     """
 
+    import os
+    print "cwd: ", os.getcwd()
     fp = open(filenamebase + ".in", "r")
+    for i in range(6):
+        fp.next()
 
+    intopts = ""
     parameters = ""
     states = ""
 
     for l in fp:
-        l = l.split()
+        l = l.strip().split()
         if l:
             if l[0] == "Constant":
                 parameters += l[1] + " = " + l[4]
@@ -69,17 +131,50 @@ def alparsein(filenamebase, code):
                 if code == "C" or code == "C++":
                     parameters += ";"
                 parameters += "\n"
-            if l[0] == "Initial" and l[1] == "Value":
+            elif l[0] == "Initial" and l[1] == "Value":
                 states += l[2] + " = " + l[5]
                 if l[3] != "UNITS" and code == "DynSysIn":
                     states += ", " + l[3]
                 if code == "C" or code == "C++":
                     states += ";"
                 states += "\n"
-    fp.close()
-    return parameters, states
+            elif l[2] == 'TINITIAL':
+                intopts += "ti = " + l[5]
+                if code == "C" or code == "C++":
+                    intopts += ";"
+                elif code == "DynSysIn" and l[3] != "UNITS":
+                    intopts += ", " + l[3]
+                intopts += "\n"
+            elif l[2] == 'TFINAL':
+                intopts += "tf = " + l[5]
+                if code == "C" or code == "C++":
+                    intopts += ";"
+                elif code == "DynSysIn" and l[3] != "UNITS":
+                    intopts += ", " + l[3]
+                intopts += "\n"
+            elif l[2] == 'INTEGSTP':
+                intopts += "ts = " + l[5]
+                if code == "C" or code == "C++":
+                    intopts += ";"
+                elif code == "DynSysIn" and l[3] != "UNITS":
+                    intopts += ", " + l[3]
+                intopts += "\n"
+            elif l[2] == 'ABSERR':
+                intopts += "abserr = " + l[4]
+                if code == "C" or code == "C++":
+                    intopts += ";"
+                intopts += "\n"
+            elif l[2] == 'RELERR':
+                intopts += "relerr = " + l[4]
+                if code == "C" or code == "C++":
+                    intopts += ";"
+                intopts += "\n"
+                break
 
-def alparsec(filenamebase, code, classname):
+    fp.close()
+    return intopts, parameters, states
+
+def alparsec(filenamebase, code):
     """Parse the .c file from Autolev to grab:
         1) list of variables that appear in all numerical calculations
         2) Evaluate constants section
@@ -152,10 +247,11 @@ def alparsec(filenamebase, code, classname):
         else:
             break
 
+    
     # Seek to the line in the ode func that has the comment above the equations
     seekto(fp, "/* Update variables after integration step */" )
     while fp.next().strip() != '':
-        pass
+        continue
 
     # Get the equations in the right hand side of the odes
     odefunc = ""
@@ -182,7 +278,6 @@ def alparsec(filenamebase, code, classname):
         if l:
             # Handle multi-line statements
             while l[-1] != ';':
-                print "in while", l
                 l += fp.next().strip()
             if code == "DynSysIn" or code == "Python":
                 l = l[:-1]
@@ -199,7 +294,6 @@ def alparsec(filenamebase, code, classname):
                 continue
             # Handle multi-line statements
             while l[-1] != ';':
-                print "in while", l
                 l += fp.next().strip()
             if code == "DynSysIn" or code == "Python":
                 l = l[:-1]
@@ -210,6 +304,28 @@ def alparsec(filenamebase, code, classname):
 
     return variables, constants, odefunc, outputs
 
+def alparse(filenamebase, classname, code="DynSysIn"):
+    """
+        filenamebase : string of the base input filename.  alparse() expects
+        that filenamebase.c and filenamebase.in exist in the current working
+        directly.
 
-alparse("slotted_discs_al", code="Python")
+        classname : Name of system.  Used to name classes in
+        Psuedo-Code/C++/Python code, used to name struct in C code.  Output
+        code is written to a file of title classname.*
+
+        code : valid choices are "DynSysIn", "Python", "C" or "C++"
+    """
+
+    infilestrings = alparsein(filenamebase, code)
+    cfilestrings = alparsec(filenamebase, code)
+
+    if code == "DynSysIn":
+        writeDynSysIn(filenamebase, classname, infilestrings, cfilestrings)
+    elif code == "C":
+        writeC(infilestrings, cfilestrings, classname)
+    elif code == "Python":
+        writePython(infilestrings, cfilestrings, classname)
+    elif code == "C++":
+        writeC++(infilestrings, cfilestrings, classname)
 
