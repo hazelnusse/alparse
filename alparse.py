@@ -12,7 +12,6 @@
 """
 
 
-
 def seekto(fp, string):
     for l in fp:
         if l.strip() == string:
