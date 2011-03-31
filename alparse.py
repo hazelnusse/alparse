@@ -263,13 +263,16 @@ def alparsec(filenamebase, code):
             if l == "/* Update derivative array prior to integration step */":
                 break
 
-            # Handle multi-line statements
-            while l[-1] != ';':
-                l += fp.next().strip()
-            if code == "DynSysIn" or code == "Python":
-                l = l[:-1]
-            l += "\n"
-            odefunc += l
+            if l == "/* Quantities to be specified */":
+                pass
+            else:
+                # Handle multi-line statements
+                while l[-1] != ';':
+                    l += fp.next().strip()
+                if code == "DynSysIn" or code == "Python":
+                    l = l[:-1]
+                l += "\n"
+                odefunc += l
 
     # Seek to the first line of the output equations
     seekto(fp, "/* Evaluate output quantities */")
