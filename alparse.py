@@ -10,26 +10,28 @@
     Section to evaluate output quantities
 
 """
-
+import os
 
 def seekto(fp, string):
     for l in fp:
         if l.strip() == string:
             break
 
-def writeDynSysIn(filenamebase, classname, infilestrings, cfilestrings):
+def writeDynSysIn(filenamebase, classname, infilestrings, cfilestrings,
+        directory=None):
+    if not directory == None:
+        classFile = os.path.join(directory, classname)
     intopts, parameters, states = infilestrings
     variables, constants, odefunc, outputs = cfilestrings
-    fp = open(classname + ".txt", "w")
+    fp = open(classFile + ".txt", "w")
     fp.write("[Name]\n" + classname + "\n\n")
-
 
     fp.write("[Integration Options]\n")
     fp.write(intopts + "\n")
 
     fp.write("[Parameters]\n")
     fp.write(parameters + "\n")
-    
+
     fp.write("[States]\n")
     fp.write(states + "\n")
 
@@ -41,7 +43,7 @@ def writeDynSysIn(filenamebase, classname, infilestrings, cfilestrings):
 
     fp.write("[Outputs]\n")
     fp.write(outputs + "\n")
-    
+
     print(filenamebase + ".dir and " + filenamebase + ".c sucessfully" +
             " parsed.  Output code is in:\n" + fp.name)
     fp.close()
@@ -55,7 +57,7 @@ def writeC(infilestrings, cfilestrings, classname):
     fp_header = open(filenamebase + ".h", "w")
     fp_implementation = open(filenamebase + ".c", "w")
     fp_driver = open(filenamebase + "_main.c", "w")
-    
+
     # Write the variables on one long line
     varstring = ""
     for v in variables:
@@ -74,7 +76,7 @@ def writeC(infilestrings, cfilestrings, classname):
         "void outputs(void);\n" +
         "#endif")
     fp_header.close()
-    
+
     # Write the implementation file
     indented_constants = ""
     indented_odefun = ""
@@ -91,7 +93,7 @@ def writeC(infilestrings, cfilestrings, classname):
         "#include <gsl/gsl_odeiv.h>\n" +
         "#include \"" + fp_header.name() + "\"\n" +
         "int initConstants(void)\n{\n" + constants + "\n}" +
-        "// initConstants()\n\n" + 
+        "// initConstants()\n\n" +
         "int eoms(double t, const double x[], double f[], void * p)\n{\n")
         #for i in range(len(
         #
@@ -110,7 +112,6 @@ def alparsein(filenamebase, code):
     the word 'Constant' or 'Initial Value'
     """
 
-    import os
     print "cwd: ", os.getcwd()
     fp = open(filenamebase + ".in", "r")
     for i in range(6):
@@ -215,7 +216,7 @@ def alparsec(filenamebase, code):
                 while l[-1] == '':
                     l.pop(-1)
                     l += fp.next().strip().split(',')
-                
+
                 if l[-1][-1] == ';':
                     l[-1] = l[-1][:-1]
 
@@ -246,7 +247,7 @@ def alparsec(filenamebase, code):
         else:
             break
 
-    
+
     # Seek to the line in the ode func that has the comment above the equations
     seekto(fp, "/* Update variables after integration step */" )
     while fp.next().strip() != '':
@@ -303,24 +304,31 @@ def alparsec(filenamebase, code):
 
     return variables, constants, odefunc, outputs
 
-def alparse(filenamebase, classname, code="DynSysIn"):
+def alparse(filenamebase, classname, code="DynSysIn", directory=None):
     """
         filenamebase : string of the base input filename.  alparse() expects
         that filenamebase.c and filenamebase.in exist in the current working
-        directly.
+        directory.
 
         classname : Name of system.  Used to name classes in
         Psuedo-Code/C++/Python code, used to name struct in C code.  Output
         code is written to a file of title classname.*
 
         code : valid choices are "DynSysIn", "Python", "C" or "C++"
+
+        directory : Optional path to the directory in which filenamebase.c and
+        filenamebase.in exist. If 'None', alparse assumes files are in current
+        working directory.
     """
+    if not directory == None:
+        filenamebase = os.path.join(directory, filenamebase)
 
     infilestrings = alparsein(filenamebase, code)
     cfilestrings = alparsec(filenamebase, code)
 
     if code == "DynSysIn":
-        writeDynSysIn(filenamebase, classname, infilestrings, cfilestrings)
+        writeDynSysIn(filenamebase, classname, infilestrings, cfilestrings,
+                directory=directory)
     elif code == "C":
         writeC(infilestrings, cfilestrings, classname)
     elif code == "Python":
