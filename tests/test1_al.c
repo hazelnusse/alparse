@@ -273,6 +273,9 @@ void     eqns1        (double T, double VAR[], double VARp[], char boundary)
   k+z[18]));
   z[120] = z[119]/z[117];
   wp = z[120];
+  
+/* Quantities to be specified */
+  test = 5.0;
 
 /* Update derivative array prior to integration step */
   VARp[0] = q1p;
@@ -1048,6 +1051,7 @@ int      i1;
   T_dbgl[14] = ctz*z[3] + z[7]*(ctx-q4) + z[17]*z[177] - d - z[8]*(cty-q5) - 
   z[179]*(l+z[18]);
   T_dbgl[15] = 1;
+
 
   Encode[0] = 0.0;
   Encode[1] = 0.0;
