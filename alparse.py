@@ -21,6 +21,8 @@ def writeDynSysIn(filenamebase, classname, infilestrings, cfilestrings,
         directory=None):
     if not directory == None:
         classFile = os.path.join(directory, classname)
+    else:
+        classFile = classname
     intopts, parameters, states = infilestrings
     variables, constants, odefunc, outputs = cfilestrings
     fp = open(classFile + ".txt", "w")
