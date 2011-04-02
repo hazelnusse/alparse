@@ -46,7 +46,7 @@ def writeDynSysIn(filenamebase, classname, infilestrings, cfilestrings,
     fp.write("[Outputs]\n")
     fp.write(outputs + "\n")
 
-    print(filenamebase + ".dir and " + filenamebase + ".c sucessfully" +
+    print(filenamebase + ".in and " + filenamebase + ".c sucessfully" +
             " parsed.  Output code is in:\n" + fp.name)
     fp.close()
 
